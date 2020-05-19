@@ -113,26 +113,19 @@ char *name;
 {
     struct passwd *pwd;
     struct lastlog newll;
-    if(AFlag){
+    if(AFlag){ // 전부 삭제
         if ((pwd=getpwnam(username1))!=NULL) {
+            unsigned long lastlog_size = sizeof(newll);
             if ((f=open(name, O_RDWR)) >= 0) {
-                lseek(f, ((long)pwd->pw_uid+1) * sizeof (struct lastlog), 0); // 다음 까지 이어붙이기
-                unsigned long delete_base = SEEK_CUR - sizeof(newll); // delete_base : 지우는 곳의 시작지점 
-                while(read(f,&newll,sizeof(newll))>0){
-                    int current = SEEK_CUR;
+                long delete_base= lastlog_size*(long)pwd->pw_uid;
+                lseek(f,delete_base+lastlog_size, SEEK_SET); // fd를 삭제할 곳 다음으로 위치함
+                while(read(f,&newll,lastlog_size)>0){ //읽고
                     lseek(f,delete_base,SEEK_SET); // 지우려고 하는 곳으로 가고
-                    write(f,(char *)&newll, sizeof(newll)); // 덮어씀
-                    lseek(f, current, SEEK_SET); //다시 돌아옴
-                    delete_base += sizeof(newll); // 지우려는 곳 한 블록씩 이동
+                    write(f,(char *)&newll, lastlog_size); // 덮어씀
+                    delete_base += lastlog_size; // 지우려는 곳 한 블록씩 이동
+                    lseek(f, delete_base+lastlog_size, SEEK_SET); //다시 돌아옴
                 }
-                
-
-                //찌꺼기 제거
-                lseek(f,delete_base,SEEK_SET); //위조한 파일 부분의 마지막으로 위치시킴
-                while(read(f,&newll,sizeof(newll))>0){
-                    bzero((char *)&newll,sizeof( newll ));
-                    write(f, (char *)&newll, sizeof( newll )); // 0으로 채우기
-                }
+                ftruncate(f,delete_base); // 마지막은 짤라버림
                 close(f);
             }else{
                 return CAN_NOT_FIND_PATH(name);   
@@ -142,6 +135,7 @@ char *name;
         }
     }else if(aFlag){
         if ((pwd=getpwnam(username1))!=NULL) {
+            unsigned long step =0;
             if ((f=open(name, O_RDWR)) >= 0) {
                 lseek(f, ((long)pwd->pw_uid+1) * sizeof (struct lastlog), 0); // 다음 까지 이어붙이기
                 unsigned long delete_base = SEEK_CUR - sizeof(newll); // delete_base : 지우는 곳의 시작지점 
