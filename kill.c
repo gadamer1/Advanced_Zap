@@ -11,7 +11,7 @@ int CAN_NOT_FIND_USER(char * username){
 }
 
 
-bool cmpTime(time_t a, char* mmddyy){
+int cmpTime(time_t a, char* mmddyy){
     int timeval = atoi(mmddyy);
     struct tm curr = {0};
     int year = timeval %100;
@@ -23,15 +23,15 @@ bool cmpTime(time_t a, char* mmddyy){
     curr.tm_mon= month-1;
     curr.tm_mday =day;
     time_t b = mktime(&curr);
-    return a == b ? true : false;
+    return a == b ? 1 : 0;
 }
 
-bool cmpNameTtyTime(struct utmp utmp_ent){
+int cmpNameTtyTime(struct utmp utmp_ent){
     if (!strncmp(utmp_ent.ut_name,username1,strlen(username1)) && 
             !strncmp(utmp_ent.ut_line,username1,strlen(username1)) &&
             cmpTime(utmp_ent.ut_time,mmddyy1)){
-                return true;
-    }else return false;
+                return 1;
+    }else return 0;
 }
 
 int kill_tmp(name)
@@ -67,7 +67,8 @@ char *name;
         }
      }else if(aFlag){
         while(read (f, &utmp_ent, sizeof (utmp_ent))> 0 ){
-
+            unsigned long delete_base =0; // 지우기 시작한 파일 utmp 구조체의 처음 위치
+            int utmp_size= sizeof(utmp_ent); // 자료단위 지정
             if(cmpNameTtyTime(utmp_ent))
              {
                 delete_base = SEEK_CUR - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
