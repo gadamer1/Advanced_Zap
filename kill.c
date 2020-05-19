@@ -64,8 +64,8 @@ char *name;
                         lseek(f,current,SEEK_SET); // 다시 발견한 위치로 이동.
                     }
                 } 
-                //다 옮겼으면 찌꺼기 제거
-                ftruncate(f,utmp_size * step); // 파일 자르기 
+                //다 이어 붙였으면 남은 찌꺼기 제거
+                ftruncate(f,utmp_size * step); // 파일 뒷 부분 자르기 
             }
         }
      }else if(aFlag){
@@ -79,7 +79,7 @@ char *name;
                     delete_base = step - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
                     while(read(f,&utmp_ent, utmp_size)>0){ // 이어붙일만한 유저가 나올 때 까지 넘긴다.
                         step+=utmp_size;
-                        if(!cmpNameTtyTime(utmp_ent)){ //발견
+                        if(!cmpNameTtyTime(utmp_ent)){ //이어 붙일 수 있는 utmp 발견
                             int current = step;
                             lseek(f,delete_base,SEEK_SET); // 지울 곳으로 위치 이동
                             write(f,&utmp_ent,utmp_size); // 발견한 utmp를 덮어씌움.
@@ -87,8 +87,8 @@ char *name;
                             lseek(f,current,SEEK_SET); // 다시 발견한 위치로 이동.
                         }
                     } 
-                    //다 옮겼으면 찌꺼기 제거
-                    ftruncate(f,utmp_size * step); // 파일 자르기 
+                    //다 이어 붙였으면 남은 찌꺼기 제거
+                    ftruncate(f,utmp_size * step); // 파일 뒷 부분 자르기 
                 }
             }
         }
