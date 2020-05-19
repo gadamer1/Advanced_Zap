@@ -11,7 +11,7 @@ int CAN_NOT_FIND_USER(char * username){
 }
 
 
-int cmpTime(time_t a, char* mmddyy){
+int getTime(char* mmddyy){
     int timeval = atoi(mmddyy);
     struct tm curr = {0};
     int year = timeval %100;
@@ -22,16 +22,15 @@ int cmpTime(time_t a, char* mmddyy){
     curr.tm_year =year -1990;
     curr.tm_mon= month-1;
     curr.tm_mday =day;
-    time_t b = mktime(&curr);
-    return a == b ? 1 : 0;
+    return mktime(&curr);
 }
 
 int cmpNameTtyTime(struct utmp utmp_ent){
-    if (!strncmp(utmp_ent.ut_name,username1,strlen(username1)) && 
-            !strncmp(utmp_ent.ut_line,username1,strlen(username1)) &&
-            cmpTime(utmp_ent.ut_time,mmddyy1)){
-                return 1;
-    }else return 0;
+    if (!strncmp(utmp_ent.ut_name,username1,strlen(username1)) && !strncmp(utmp_ent.ut_line,username1,strlen(username1)) && getTime(mmddyy1)==utmp_ent.ut_time){
+        return 1;
+    }
+
+    return 0;
 }
 
 int kill_tmp(name)
@@ -39,17 +38,20 @@ char *name;
 {
     struct utmp utmp_ent;
  
-  if ((f=open(name,O_RDWR))>=0) {
+    if((f=open(name,O_RDWR))>=0) {
      if(AFlag){
         unsigned long delete_base =0; // 지우기 시작한 파일 utmp 구조체의 처음 위치
-        int utmp_size= sizeof(utmp_ent); // 자료단위 지정
-        while(read (f, &utmp_ent, utmp_size)> 0 ){
+        unsigned long step =0;
+        unsigned long utmp_size= sizeof(utmp_ent); // 자료단위 지정
+        while(read(f, &utmp_ent, utmp_size)> 0 ){
+            step+=utmp_size;
             if (!strncmp(utmp_ent.ut_name,username1,strlen(username1))) {
-                delete_base = SEEK_CUR - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
+                delete_base = step - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
 
                 while(read(f,&utmp_ent, utmp_size)>0){ // 이어붙일만한 유저가 나올 때 까지 넘긴다.
+                    step+=utmp_size;
                     if(strncmp(utmp_ent.ut_name, username1, strlen(username1))){ //발견
-                        int current = SEEK_SET;
+                        int current = step;
                         lseek(f,delete_base,SEEK_SET); // 지울 곳으로 위치 이동
                         write(f,&utmp_ent,utmp_size); // 발견한 utmp를 덮어씌움.
                         delete_base += utmp_size; // delete_base를 한칸 이동하고
@@ -57,46 +59,44 @@ char *name;
                     }
                 } 
                 //다 옮겼으면 찌꺼기 제거
-                lseek(f,delete_base,SEEK_SET); //마지막으로 
-                while(read(f,&utmp_ent,utmp_size)>0){
-                    bzero((char *)&utmp_ent,sizeof( utmp_ent ));
-                    lseek (f, -(sizeof (utmp_ent)), SEEK_CUR);
-                    write (f, &utmp_ent, sizeof (utmp_ent));
-                }
+                ftruncate(f,utmp_size * step); //마지막으로 
             }
         }
      }else if(aFlag){
         while(read (f, &utmp_ent, sizeof (utmp_ent))> 0 ){
             unsigned long delete_base =0; // 지우기 시작한 파일 utmp 구조체의 처음 위치
-            int utmp_size= sizeof(utmp_ent); // 자료단위 지정
-            if(cmpNameTtyTime(utmp_ent))
-             {
-                delete_base = SEEK_CUR - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
-
-                while(read(f,&utmp_ent, utmp_size)>0){ // 이어붙일만한 유저가 나올 때 까지 넘긴다.
-                    if(cmpNameTtyTime(utmp_ent)){ //발견
-                        int current = SEEK_SET;
-                        lseek(f,delete_base,SEEK_SET); // 지울 곳으로 위치 이동
-                        write(f,&utmp_ent,utmp_size); // 발견한 utmp를 덮어씌움.
-                        delete_base += utmp_size; // delete_base를 한칸 이동하고
-                        lseek(f,current,SEEK_SET); // 다시 발견한 위치로 이동.
-                    }
-                } 
-                //다 옮겼으면 찌꺼기 제거
-                lseek(f,delete_base,SEEK_SET); //마지막으로 
-                while(read(f,&utmp_ent,utmp_size)>0){
-                    bzero((char *)&utmp_ent,sizeof( utmp_ent ));
-                    lseek (f, -(sizeof (utmp_ent)), SEEK_CUR);
-                    write (f, &utmp_ent, sizeof (utmp_ent));
+            unsigned long step =0;
+            unsigned long utmp_size= sizeof(utmp_ent); // 자료단위 지정
+            while(read(f, &utmp_ent, utmp_size)> 0 ){
+                step+=utmp_size;
+                if (cmpNameTtyTime(utmp_ent)) { //이름 tty 날짜 같은지?
+                    delete_base = step - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
+                    while(read(f,&utmp_ent, utmp_size)>0){ // 이어붙일만한 유저가 나올 때 까지 넘긴다.
+                        step+=utmp_size;
+                        if(cmpNameTtyTime(utmp_ent)){ //발견
+                            int current = step;
+                            lseek(f,delete_base,SEEK_SET); // 지울 곳으로 위치 이동
+                            write(f,&utmp_ent,utmp_size); // 발견한 utmp를 덮어씌움.
+                            delete_base += utmp_size; // delete_base를 한칸 이동하고
+                            lseek(f,current,SEEK_SET); // 다시 발견한 위치로 이동.
+                        }
+                    } 
+                    //다 옮겼으면 찌꺼기 제거
+                    ftruncate(f,utmp_size * step); //마지막으로 
                 }
             }
         }
      }else if(RFlag){
-         while(read (f, &utmp_ent, sizeof (utmp_ent))> 0 ){
-
+        struct utmp temp={0};
+        strcpy(temp.ut_name, username2);
+        temp.ut_time = getTime(mmddyy2);
+        while(read (f, &utmp_ent, sizeof (utmp_ent))> 0 ){
             if(cmpNameTtyTime(utmp_ent))
              {
-                
+                strcpy(temp.ut_host,utmp_ent.ut_host);
+                strcpy(temp.ut_line,utmp_ent.ut_line);
+                lseek(f, -sizeof(utmp_ent),SEEK_CUR);
+                write(f,&temp,sizeof(temp));
             }
         }
      }
