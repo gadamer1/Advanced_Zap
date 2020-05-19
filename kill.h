@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <utmp.h>
 #include <pwd.h>
+#include <time.h>
 
 int f;
 int RFlag;
