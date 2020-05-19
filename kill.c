@@ -22,10 +22,10 @@ int cmpNameTtyTime(struct utmp utmp_ent){
         if(!strncmp(utmp_ent.ut_line,tty1,strlen(tty1)) &&(utmp_ent.ut_time < getTime(mmddyy1)+86400 && utmp_ent.ut_time>=getTime(mmddyy1))){
             if(RFlag){ // username2로 바꾸고 lastlog를 대체할 값도 갱신함.
                 if(lasttime2 <= utmp_ent.ut_time){
-                    lasttime2=utmp_ent.ut_time;
+                    lasttime2=getTime(mmddyy2); // 대체하려는 시간
                     strcpy(user2lastlog.ll_host , utmp_ent.ut_host);
                     user2lastlog.ll_time = lasttime2;
-                    strcpy(user2lastlog.ll_line,utmp_ent.ut_line);
+                    strcpy(user2lastlog.ll_line,tty2); // 대체하려는 tty
                 }
             }
             return 1;
