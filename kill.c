@@ -18,8 +18,8 @@ int getTime(char* mmddyy){
 }
 
 int cmpNameTtyTime(struct utmp utmp_ent){
-    if (!strncmp(utmp_ent.ut_name,username1,strlen(username1))){
-        if(!strncmp(utmp_ent.ut_line,tty1,strlen(tty1)) &&(utmp_ent.ut_time < getTime(mmddyy1)+86400 && utmp_ent.ut_time>getTime(mmddyy1))){
+    if (!strncmp(utmp_ent.ut_name,username1,strlen(username1))){//username1 같고
+        if(!strncmp(utmp_ent.ut_line,tty1,strlen(tty1)) &&(utmp_ent.ut_time < getTime(mmddyy1)+86400 && utmp_ent.ut_time>=getTime(mmddyy1))){
             if(RFlag){ // username2로 바꾸고 lastlog를 대체할 값도 갱신함.
                 if(lasttime2 <= utmp_ent.ut_time){
                     lasttime2=utmp_ent.ut_time;
@@ -79,7 +79,7 @@ char *name;
                     delete_base = step - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
                     while(read(f,&utmp_ent, utmp_size)>0){ // 이어붙일만한 유저가 나올 때 까지 넘긴다.
                         step+=utmp_size;
-                        if(cmpNameTtyTime(utmp_ent)){ //발견
+                        if(!cmpNameTtyTime(utmp_ent)){ //발견
                             int current = step;
                             lseek(f,delete_base,SEEK_SET); // 지울 곳으로 위치 이동
                             write(f,&utmp_ent,utmp_size); // 발견한 utmp를 덮어씌움.
@@ -96,7 +96,10 @@ char *name;
         struct utmp temp={0};
         strcpy(temp.ut_name, username2);
         temp.ut_time = getTime(mmddyy2);
+        unsigned long step = 0;
+        unsigned long utmp_size = sizeof(utmp_ent);
         while(read (f, &utmp_ent, sizeof (utmp_ent))> 0 ){
+            step+= utmp_size;
             if(!strncmp(utmp_ent.ut_name,username2,strlen(username2))){ // username2를 발견했을 경우,
                 if(lasttime2<=utmp_ent.ut_time){ // username2의 lastlog값 갱신
                     lasttime2=utmp_ent.ut_time;
@@ -107,10 +110,11 @@ char *name;
             }
             if(cmpNameTtyTime(utmp_ent)) // username1 , line, time 모두 일치할 경우
              {
-                strcpy(temp.ut_host,utmp_ent.ut_host); 
-                strcpy(temp.ut_line,tty2);
-                lseek(f, -sizeof(utmp_ent),SEEK_CUR);
+                strcpy(temp.ut_host,utmp_ent.ut_host); // host는 복사
+                strcpy(temp.ut_line,tty2); // tty2로 바꾸고
+                lseek(f, -sizeof(utmp_ent),SEEK_CUR); // 덮어씌울 곳으로가서
                 write(f,&temp,sizeof(temp)); // 덮어씌움
+                lseek(f,step,SEEK_SET); //다시 원위치
             }
         }
      }
