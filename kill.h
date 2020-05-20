@@ -10,6 +10,9 @@ int f;
 int RFlag;
 int AFlag;
 int aFlag;
+int tFlag;
+int dFlag;
+
 
 char * username1;
 char *username2;

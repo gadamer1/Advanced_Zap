@@ -13,6 +13,8 @@ int main(int argc,char *argv[])
     aFlag=0;
     RFlag=0;
     AFlag=0;
+    tFlag=0;
+    dFlag=0;
     lasttime1 = 0;
     lasttime2 = 0;
 
@@ -28,9 +30,11 @@ int main(int argc,char *argv[])
             username1 = optarg;
             break;
         case 't':
+            tFlag=1;
             tty1 = optarg;
             break;
         case 'd':
+            dFlag=1;
             mmddyy1 = optarg;
             break;
         case 'R':
