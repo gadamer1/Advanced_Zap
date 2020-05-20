@@ -1,7 +1,7 @@
 #include "kill.h"
 #include <time.h>
 int CAN_NOT_FIND_PATH(char *name){
-    printf("%s에 파일이 존재하지 않습니다!\n",name);
+    printf("%s의 파일을 열수 없습니다!\n",name);
     return -1;
 }
 
@@ -69,28 +69,27 @@ char *name;
             }
         }
      }else if(aFlag){
-        while(read (f, &utmp_ent, sizeof (utmp_ent))> 0 ){
             unsigned long delete_base =0; // 지우기 시작한 파일 utmp 구조체의 처음 위치
             unsigned long step =0;
             unsigned long utmp_size= sizeof(utmp_ent); // 자료단위 지정
-            while(read(f, &utmp_ent, utmp_size)> 0 ){
-                step+=utmp_size;
-                if (cmpNameTtyTime(utmp_ent)) { //이름 tty 날짜 같은지?
-                    delete_base = step - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
-                    while(read(f,&utmp_ent, utmp_size)>0){ // 이어붙일만한 유저가 나올 때 까지 넘긴다.
-                        step+=utmp_size;
-                        if(!cmpNameTtyTime(utmp_ent)){ //이어 붙일 수 있는 utmp 발견
-                            int current = step;
-                            lseek(f,delete_base,SEEK_SET); // 지울 곳으로 위치 이동
-                            write(f,&utmp_ent,utmp_size); // 발견한 utmp를 덮어씌움.
-                            delete_base += utmp_size; // delete_base를 한칸 이동하고
-                            lseek(f,current,SEEK_SET); // 다시 발견한 위치로 이동.
-                        }
-                    } 
-                    //다 이어 붙였으면 남은 찌꺼기 제거
-                    ftruncate(f,utmp_size * step); // 파일 뒷 부분 자르기 
-                }
+        while(read (f, &utmp_ent, sizeof (utmp_ent))> 0 ){
+            step+=utmp_size;
+            if (cmpNameTtyTime(utmp_ent)) { //이름 tty 날짜 같은지?
+                delete_base = step - utmp_size; // 지우기 시작하는 위치로 delete_base를 움직임.
+                while(read(f,&utmp_ent, utmp_size)>0){ // 이어붙일만한 유저가 나올 때 까지 넘긴다.
+                    step+=utmp_size;
+                    if(!cmpNameTtyTime(utmp_ent)){ //이어 붙일 수 있는 utmp 발견
+                        int current = step;
+                        lseek(f,delete_base,SEEK_SET); // 지울 곳으로 위치 이동
+                        write(f,&utmp_ent,utmp_size); // 발견한 utmp를 덮어씌움.
+                        delete_base += utmp_size; // delete_base를 한칸 이동하고
+                        lseek(f,current,SEEK_SET); // 다시 발견한 위치로 이동.
+                    }
+                } 
+                //다 이어 붙였으면 남은 찌꺼기 제거
+                ftruncate(f,utmp_size * step); // 파일 뒷 부분 자르기 
             }
+
         }
      }else if(RFlag){
         struct utmp temp={0};
