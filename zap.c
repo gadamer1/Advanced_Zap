@@ -48,6 +48,10 @@ int main(int argc,char *argv[])
 
             mmddyy1 = argv[optind+5];
             mmddyy2 = argv[optind+6];
+            if(!tty1||tty2||!mmddyy1||!mmddyy2){
+                printf("please input -t option and -d option!\n");
+                return 0;
+            }
 
             break;
         case '?':
