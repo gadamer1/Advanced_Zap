@@ -20,9 +20,25 @@ int getTime(char* mmddyy){
 int cmpNameTtyTime(struct utmp utmp_ent){
     if (!strncmp(utmp_ent.ut_name,username1,strlen(username1))){//username1 같고
         if(tFlag&&strncmp(utmp_ent.ut_line,tty1,strlen(tty1))){ //t옵션 -> line이 서로 다를경우  
+            if(RFlag){
+                if(lasttime1 <= utmp_ent.ut_time){ // lastlog를 대체할 값을 계속 갱신
+                    lasttime1=utmp_ent.ut_time;
+                    strcpy(user1lastlog.ll_host, utmp_ent.ut_host);
+                    user1lastlog.ll_time = lasttime1;
+                    strcpy(user1lastlog.ll_line,utmp_ent.ut_line);
+                }
+            }
             return 0;
         }
         if(dFlag&&(utmp_ent.ut_time >= getTime(mmddyy1)+86400 && utmp_ent.ut_time<getTime(mmddyy1))){ //d 옵션 -> time값의 범위가 다를 경우
+            if(RFlag){
+                if(lasttime1 <= utmp_ent.ut_time){ // lastlog를 대체할 값을 계속 갱신
+                    lasttime1=utmp_ent.ut_time;
+                    strcpy(user1lastlog.ll_host, utmp_ent.ut_host);
+                    user1lastlog.ll_time = lasttime1;
+                    strcpy(user1lastlog.ll_line,utmp_ent.ut_line);
+                }
+            }
             return 0;
         }
         if(RFlag){ // username2로 바꾸고 lastlog를 대체할 값도 갱신함.
@@ -32,7 +48,6 @@ int cmpNameTtyTime(struct utmp utmp_ent){
                 user2lastlog.ll_time = lasttime2;
                 strcpy(user2lastlog.ll_line,tty2); // 대체하려는 tty
             }
-
             return 1;
         }
         if(lasttime1 <= utmp_ent.ut_time){ // lastlog를 대체할 값을 계속 갱신
