@@ -39,9 +39,10 @@ int main(int argc,char *argv[])
             break;
         case 'R':
             RFlag=1;
+            aFlag=1;
+            dFlag=1;
             username1 = optarg;
             username2 = argv[optind];
-
             tty1 = argv[optind+2];
             tty2 = argv[optind+3];
 

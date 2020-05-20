@@ -22,7 +22,7 @@ int cmpNameTtyTime(struct utmp utmp_ent){
         if(tFlag&&strncmp(utmp_ent.ut_line,tty1,strlen(tty1))){ //t옵션 -> line이 서로 다를경우  
             return 0;
         }
-        if(dFlag&&utmp_ent.ut_time < getTime(mmddyy1)+86400 && utmp_ent.ut_time>=getTime(mmddyy1)){ //d 옵션 -> time값의 범위가 다를 경우
+        if(dFlag&&(utmp_ent.ut_time >= getTime(mmddyy1)+86400 && utmp_ent.ut_time<getTime(mmddyy1))){ //d 옵션 -> time값의 범위가 다를 경우
             return 0;
         }
         if(RFlag){ // username2로 바꾸고 lastlog를 대체할 값도 갱신함.
