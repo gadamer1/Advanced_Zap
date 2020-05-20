@@ -13,8 +13,6 @@ int main(int argc,char *argv[])
     aFlag=0;
     RFlag=0;
     AFlag=0;
-    tFlag=0;
-    dFlag=0;
     lasttime1 = 0;
     lasttime2 = 0;
 
@@ -30,28 +28,21 @@ int main(int argc,char *argv[])
             username1 = optarg;
             break;
         case 't':
-            tFlag=1;
             tty1 = optarg;
             break;
         case 'd':
-            dFlag=1;
             mmddyy1 = optarg;
             break;
         case 'R':
             RFlag=1;
-            aFlag=1;
-            dFlag=1;
             username1 = optarg;
             username2 = argv[optind];
+
             tty1 = argv[optind+2];
             tty2 = argv[optind+3];
 
             mmddyy1 = argv[optind+5];
             mmddyy2 = argv[optind+6];
-            if(!tty1||!tty2||!mmddyy1||!mmddyy2){
-                printf("please input -t option and -d option!\n");
-                return 0;
-            }
 
             break;
         case '?':

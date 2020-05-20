@@ -19,34 +19,14 @@ int getTime(char* mmddyy){
 
 int cmpNameTtyTime(struct utmp utmp_ent){
     if (!strncmp(utmp_ent.ut_name,username1,strlen(username1))){//username1 같고
-        if(tFlag&&strncmp(utmp_ent.ut_line,tty1,strlen(tty1))){ //t옵션 -> line이 서로 다를경우  
-            if(RFlag){
-                if(lasttime1 <= utmp_ent.ut_time){ // lastlog를 대체할 값을 계속 갱신
-                    lasttime1=utmp_ent.ut_time;
-                    strcpy(user1lastlog.ll_host, utmp_ent.ut_host);
-                    user1lastlog.ll_time = lasttime1;
-                    strcpy(user1lastlog.ll_line,utmp_ent.ut_line);
+        if(!strncmp(utmp_ent.ut_line,tty1,strlen(tty1)) &&(utmp_ent.ut_time < getTime(mmddyy1)+86400 && utmp_ent.ut_time>=getTime(mmddyy1))){
+            if(RFlag){ // username2로 바꾸고 lastlog를 대체할 값도 갱신함.
+                if(lasttime2 <= utmp_ent.ut_time){
+                    lasttime2=getTime(mmddyy2); // 대체하려는 시간
+                    strcpy(user2lastlog.ll_host , utmp_ent.ut_host);
+                    user2lastlog.ll_time = lasttime2;
+                    strcpy(user2lastlog.ll_line,tty2); // 대체하려는 tty
                 }
-            }
-            return 0;
-        }
-        if(dFlag&&(utmp_ent.ut_time >= getTime(mmddyy1)+86400 && utmp_ent.ut_time<getTime(mmddyy1))){ //d 옵션 -> time값의 범위가 다를 경우
-            if(RFlag){
-                if(lasttime1 <= utmp_ent.ut_time){ // lastlog를 대체할 값을 계속 갱신
-                    lasttime1=utmp_ent.ut_time;
-                    strcpy(user1lastlog.ll_host, utmp_ent.ut_host);
-                    user1lastlog.ll_time = lasttime1;
-                    strcpy(user1lastlog.ll_line,utmp_ent.ut_line);
-                }
-            }
-            return 0;
-        }
-        if(RFlag){ // username2로 바꾸고 lastlog를 대체할 값도 갱신함.
-            if(lasttime2 <= utmp_ent.ut_time){
-                lasttime2=getTime(mmddyy2); // 대체하려는 시간
-                strcpy(user2lastlog.ll_host , utmp_ent.ut_host);
-                user2lastlog.ll_time = lasttime2;
-                strcpy(user2lastlog.ll_line,tty2); // 대체하려는 tty
             }
             return 1;
         }
@@ -56,8 +36,6 @@ int cmpNameTtyTime(struct utmp utmp_ent){
             user1lastlog.ll_time = lasttime1;
             strcpy(user1lastlog.ll_line,utmp_ent.ut_line);
         }
-
-        return 1;
     }
 
     return 0;
